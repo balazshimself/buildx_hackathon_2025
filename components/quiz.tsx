@@ -209,7 +209,7 @@ export default function Quiz({
                         variant="outline"
                         className="bg-muted hover:bg-muted/80 w-full"
                       >
-                        <Upload className="mr-2 h-4 w-4" /> Upload Quiz
+                        <Upload className="mr-2 h-4 w-4" /> Share Quiz
                       </Button>
                       <Button
                         onClick={clearFiles}
