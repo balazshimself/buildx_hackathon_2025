@@ -12,11 +12,7 @@ export const metadata: Metadata = {
   description: "Experimental preview of PDF support with the AI SDK",
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({children}: Readonly<{children: React.ReactNode;}>) {
   return (
     <html lang="en" suppressHydrationWarning className={`${geist.className}`}>
       <body>

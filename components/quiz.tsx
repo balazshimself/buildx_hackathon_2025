@@ -9,6 +9,8 @@ import {
   X,
   RefreshCw,
   FileText,
+  Edit,
+  Upload,
 } from "lucide-react";
 import QuizScore from "./score";
 import QuizReview from "./quiz-overview";
@@ -16,8 +18,9 @@ import { Question } from "@/lib/schemas";
 
 type QuizProps = {
   questions: Question[];
-  clearPDF: () => void;
-  title: string;
+  mainTopic: string;
+  subTopics: string[];
+  clearFiles: () => void;
 };
 
 const QuestionCard: React.FC<{
@@ -27,7 +30,7 @@ const QuestionCard: React.FC<{
   isSubmitted: boolean;
   showCorrectAnswer: boolean;
 }> = ({ question, selectedAnswer, onSelectAnswer, showCorrectAnswer }) => {
-  const answerLabels = ["A", "B", "C", "D"];
+  const answerLabels = ["A", "B", "C", "D", "E"];
 
   return (
     <div className="space-y-6">
@@ -74,8 +77,9 @@ const QuestionCard: React.FC<{
 
 export default function Quiz({
   questions,
-  clearPDF,
-  title = "Quiz",
+  mainTopic,
+  subTopics,
+  clearFiles,
 }: QuizProps) {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<string[]>(
@@ -136,7 +140,7 @@ export default function Quiz({
     <div className="min-h-screen bg-background text-foreground">
       <main className="container mx-auto px-4 py-12 max-w-4xl">
         <h1 className="text-3xl font-bold mb-8 text-center text-foreground">
-          {title}
+          {`${mainTopic} | Quiz`}
         </h1>
         <div className="relative">
           {!isSubmitted && <Progress value={progress} className="h-1 mb-8" />}
@@ -190,7 +194,7 @@ export default function Quiz({
                       totalQuestions={questions.length}
                     />
                     <div className="space-y-12">
-                      <QuizReview questions={questions} userAnswers={answers} />
+                      <QuizReview questions={questions} userAnswers={answers} mainTopic={mainTopic} subTopics={subTopics}/>
                     </div>
                     <div className="flex justify-center space-x-4 pt-4">
                       <Button
@@ -198,13 +202,20 @@ export default function Quiz({
                         variant="outline"
                         className="bg-muted hover:bg-muted/80 w-full"
                       >
-                        <RefreshCw className="mr-2 h-4 w-4" /> Reset Quiz
+                        <RefreshCw className="mr-2 h-4 w-4" /> Solve Again
                       </Button>
                       <Button
-                        onClick={clearPDF}
+                        // onClick={}
+                        variant="outline"
+                        className="bg-muted hover:bg-muted/80 w-full"
+                      >
+                        <Upload className="mr-2 h-4 w-4" /> Upload Quiz
+                      </Button>
+                      <Button
+                        onClick={clearFiles}
                         className="bg-primary hover:bg-primary/90 w-full"
                       >
-                        <FileText className="mr-2 h-4 w-4" /> Try Another PDF
+                        <FileText className="mr-2 h-4 w-4" /> Create a new quiz
                       </Button>
                     </div>
                   </div>
