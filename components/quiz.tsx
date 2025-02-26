@@ -9,12 +9,15 @@ import {
   X,
   RefreshCw,
   FileText,
-  Edit,
   Upload,
 } from "lucide-react";
 import QuizScore from "./score";
 import QuizReview from "./quiz-overview";
 import { Question } from "@/lib/schemas";
+import ShareQuizButton from "./ui/ShareQuizButton";
+import { useAuth } from "@/lib/auth-context";
+import { createQuiz } from "@/lib/firestore";
+import { toast } from "sonner";
 
 type QuizProps = {
   questions: Question[];
@@ -81,6 +84,7 @@ export default function Quiz({
   subTopics,
   clearFiles,
 }: QuizProps) {
+  const { user } = useAuth();
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<string[]>(
     Array(questions.length).fill(null),
@@ -88,6 +92,7 @@ export default function Quiz({
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [score, setScore] = useState<number | null>(null);
   const [progress, setProgress] = useState(0);
+  const [savedQuizId, setSavedQuizId] = useState<string | null>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -132,6 +137,32 @@ export default function Quiz({
     setScore(null);
     setCurrentQuestionIndex(0);
     setProgress(0);
+  };
+
+  const handleSaveQuiz = async () => {
+    if (!user) {
+      toast.error("Please log in to save quizzes");
+      return;
+    }
+    
+    try {
+      const quizData = {
+        title: mainTopic,
+        userId: user.uid,
+        creatorName: user.displayName || user.email?.split('@')[0] || 'Anonymous',
+        mainTopic,
+        subTopics,
+        questions,
+        isPublic: false
+      };
+      
+      const quizId = await createQuiz(quizData);
+      setSavedQuizId(quizId);
+      toast.success("Quiz saved successfully!");
+    } catch (error) {
+      console.error("Error saving quiz:", error);
+      toast.error("Failed to save quiz. Please try again.");
+    }
   };
 
   const currentQuestion = questions[currentQuestionIndex];
@@ -196,7 +227,7 @@ export default function Quiz({
                     <div className="space-y-12">
                       <QuizReview questions={questions} userAnswers={answers} mainTopic={mainTopic} subTopics={subTopics}/>
                     </div>
-                    <div className="flex justify-center space-x-4 pt-4">
+                    <div className="flex flex-col md:flex-row justify-center space-y-4 md:space-y-0 md:space-x-4 pt-4">
                       <Button
                         onClick={handleReset}
                         variant="outline"
@@ -204,13 +235,21 @@ export default function Quiz({
                       >
                         <RefreshCw className="mr-2 h-4 w-4" /> Solve Again
                       </Button>
-                      <Button
-                        // onClick={}
-                        variant="outline"
-                        className="bg-muted hover:bg-muted/80 w-full"
-                      >
-                        <Upload className="mr-2 h-4 w-4" /> Share Quiz
-                      </Button>
+                      
+                      {user && (
+                        savedQuizId ? (
+                          <ShareQuizButton quizId={savedQuizId} isPublic={false} />
+                        ) : (
+                          <Button
+                            onClick={handleSaveQuiz}
+                            variant="outline"
+                            className="bg-muted hover:bg-muted/80 w-full"
+                          >
+                            <Upload className="mr-2 h-4 w-4" /> Save Quiz
+                          </Button>
+                        )
+                      )}
+                      
                       <Button
                         onClick={clearFiles}
                         className="bg-primary hover:bg-primary/90 w-full"

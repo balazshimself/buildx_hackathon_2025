@@ -151,9 +151,9 @@ export default function QuizReview({ questions, userAnswers, mainTopic = "Quiz",
                                 key={optionIndex}
                                 className={`
                                   flex items-center p-4 rounded-lg
-                                  transition-all duration-500
-                                  ${showingExplanation ? 'transform origin-top' : ''}
-                                  ${shouldShow ? 'opacity-100 max-h-24' : 'opacity-0 max-h-0 overflow-hidden m-0 p-0'}
+                                  transition-all duration-300
+                                  ${showingExplanation ? 'transform' : ''}
+                                  ${shouldShow ? 'opacity-100 max-h-24 mb-2' : 'opacity-0 max-h-0 overflow-hidden p-0 m-0'}
                                   ${
                                     isCorrect
                                       ? 'bg-green-100 dark:bg-green-700/50'

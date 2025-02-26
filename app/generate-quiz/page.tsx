@@ -12,6 +12,7 @@ import { Link } from "@/components/ui/link"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { AnimatePresence, motion } from "framer-motion"
+import MainLayout from "@/components/layout/MainLayout"
 
 export default function ChatWithFiles() {
   const [files, setFiles] = useState<File[]>([])
@@ -147,6 +148,7 @@ export default function ChatWithFiles() {
   }
 
   return (
+    <MainLayout>
     <div
       className="min-h-[100dvh] w-full flex justify-center flex-col items-center"
       onDragOver={(e) => {
@@ -189,10 +191,9 @@ export default function ChatWithFiles() {
             </div>
           </div>
           <div className="space-y-2">
-            <CardTitle className="text-2xl font-bold">Revision Quiz Generator AI</CardTitle>
+            <CardTitle className="text-2xl font-bold">Revision Quiz Generator</CardTitle>
             <CardDescription className="text-base">
-              Upload files and specify topics to generate an interactive quiz using the{" "}
-              <Link href="https://sdk.vercel.ai">AI SDK</Link> and{" "}
+              Upload files and specify topics to generate an interactive quiz using{" "}
               <Link href="https://sdk.vercel.ai/providers/ai-sdk-providers/google-generative-ai">
                 Google&apos;s Gemini Pro
               </Link>
@@ -284,5 +285,6 @@ export default function ChatWithFiles() {
       </Card>
       {error && <div className="mt-4 p-4 text-sm text-red-500 bg-red-500/10 rounded">{error}</div>}
     </div>
+    </MainLayout>
   )
 }
