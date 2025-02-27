@@ -48,25 +48,17 @@ export default function Header() {
               </div>
               <Button
                 onClick={handleLogout}
-                variant="outline"
-              >
+                variant="outline">
                 Log Out
               </Button>
             </>
           ) : (
             <>
               <Button
-                onClick={openSignUp}
-                variant="ghost"
-                className="hidden md:flex"
-              >
-                Get Started
-              </Button>
-              <Button
                 onClick={openSignIn}
                 variant="outline"
               >
-                Log In
+                Log In / Sign Up
               </Button>
             </>
           )}

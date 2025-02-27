@@ -4,6 +4,7 @@ import { Toaster } from "sonner";
 import { ThemeProvider } from "next-themes";
 import { Geist } from "next/font/google";
 import { AuthProvider } from "@/lib/auth-context";
+import { QuizProvider } from "@/lib/quiz-context";
 
 const geist = Geist({ subsets: ["latin"] });
 
@@ -18,8 +19,10 @@ export default function RootLayout({children}: Readonly<{children: React.ReactNo
       <body>
         <ThemeProvider attribute="class" enableSystem forcedTheme="dark">
           <AuthProvider>
-            <Toaster position="top-center" richColors />
-            {children}
+            <QuizProvider>
+              <Toaster position="top-center" richColors />
+              {children}
+            </QuizProvider>
           </AuthProvider>
         </ThemeProvider>
       </body>
