@@ -129,7 +129,7 @@ export default function QuizDetailPage() {
 
   return (
     <MainLayout>
-      <div className="container mx-auto max-w-3xl px-4 py-12 md:py-24 flex flex-col items-center justify-center">
+      <div className="min-h-screen mx-auto max-w-3xl px-4 py-12 md:py-24 flex flex-col items-center justify-center">
         <Card className="border-0 shadow-lg w-full">
           <CardHeader className="pb-2 text-center">
             <CardTitle className="text-3xl font-bold">{quiz.mainTopic}</CardTitle>
@@ -146,16 +146,11 @@ export default function QuizDetailPage() {
               ))}
             </div>
           </CardHeader>
-          <CardContent className="pt-6">
+          <CardContent>
             <div className="space-y-4 text-center">
               <p className="text-muted-foreground">
                 This quiz contains {quiz.questions.length} questions about {quiz.mainTopic}.
               </p>
-              {!quiz.isTemporary && (
-                <p className="text-sm text-muted-foreground">
-                  Completed {quiz.completions || 0} {quiz.completions === 1 ? 'time' : 'times'}
-                </p>
-              )}
               <Button 
                 onClick={handleTakeQuiz} 
                 size="lg" 

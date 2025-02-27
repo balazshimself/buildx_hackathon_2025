@@ -22,15 +22,14 @@ export default function CreateQuizSection({ isVisible }: CreateQuizSectionProps)
   const containerVariants = {
     hidden: { 
       opacity: 0, 
-      y: 50,
+      y: 100,
       height: 0,
-      marginTop: 0
+      marginTop: '2.5vh',
     },
     visible: { 
       opacity: 1, 
-      y: -100,
+      y: 0,
       height: 'auto',
-      marginTop: 0,
       transition: { 
         duration: 0.5,
         staggerChildren: 0.1
@@ -39,7 +38,8 @@ export default function CreateQuizSection({ isVisible }: CreateQuizSectionProps)
   };
 
   const cardVariants = {
-    hidden: { opacity: 0, y: 40 },
+    hidden: {
+        opacity: 0, y: 40},
     visible: { 
       opacity: 1, 
       y: 0,
@@ -49,7 +49,7 @@ export default function CreateQuizSection({ isVisible }: CreateQuizSectionProps)
 
   return (
     <motion.div
-      className="container mx-auto max-w-7xl"
+      className={`container mx-auto max-w-7xl h-full ${!isVisible ? 'pointer-events-none' : ''}`}
       variants={containerVariants}
       initial="hidden"
       animate={isVisible ? "visible" : "hidden"}>

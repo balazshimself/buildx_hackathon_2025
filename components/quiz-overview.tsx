@@ -89,14 +89,14 @@ export default function QuizReview({ questions, userAnswers, mainTopic = "Quiz",
   }
 
   return (
-    <div className="w-full overflow-hidden">
+    <div className="w-full">
         {Object.entries(questionsBySubtopic).map(([subtopicIndexStr, subtopicQuestions]) => {
           const subtopicIndex = parseInt(subtopicIndexStr)
           const stats = subtopicStats[subtopicIndex]
           const isExpanded = expandedSubtopics[subtopicIndex]
           
           return (
-            <Card key={subtopicIndex} className="mb-6 last:mb-0 overflow-hidden">
+            <Card key={subtopicIndex} className="mb-6 last:mb-0">
               <CardHeader 
                 className="flex flex-row items-center justify-between cursor-pointer"
                 onClick={() => toggleSubtopic(subtopicIndex)}
@@ -108,24 +108,21 @@ export default function QuizReview({ questions, userAnswers, mainTopic = "Quiz",
                   <span className="mr-2 font-medium">
                     {stats.correct}/{stats.total} correct
                   </span>
-                  <motion.div
-                    initial={false}
-                    animate={{ rotate: isExpanded ? 180 : 0 }}
-                    transition={{ duration: 0.3 }}
-                  >
+                  {isExpanded ? (
+                    <ChevronUp className="h-5 w-5" />
+                  ) : (
                     <ChevronDown className="h-5 w-5" />
-                  </motion.div>
+                  )}
                 </div>
               </CardHeader>
               
-              <AnimatePresence>
+              <AnimatePresence mode="wait">
                 {isExpanded && (
                   <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="overflow-hidden"
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.5 }}
                   >
                     <CardContent className="pt-2">
                       {subtopicQuestions.map((question, questionIndex) => {
@@ -140,32 +137,50 @@ export default function QuizReview({ questions, userAnswers, mainTopic = "Quiz",
                           <Card key={questionIndex} className="mb-6 p-1 last:mb-0 bg-gray">
                             <CardHeader className="flex flex-row items-start justify-between gap-4">
                               <CardTitle className="text-lg font-bold">{question.question}</CardTitle>
-                              <Button 
-                                className={`rounded-full shrink-0 transition-all h-12 w-12 ${showingExplanation ? 'bg-primary/80' : ''}`}
-                                onClick={() => toggleExplanation(subtopicIndex, questionIndex)}>
-                                <School size={24} /> 
-                              </Button>
+                              <div className="relative">
+                                <Button 
+                                  className={`rounded-full shrink-0 transition-all duration-300 ${showingExplanation ? 'bg-blue-500 hover:bg-blue-600 text-white' : ''}`}
+                                  onClick={() => toggleExplanation(subtopicIndex, questionIndex)}
+                                >
+                                  <School className="h-5 w-5" /> 
+                                </Button>
+                                
+                                {/* Speech bubble explanation */}
+                                <AnimatePresence>
+                                  {showingExplanation && question.explanation && (
+                                    <motion.div 
+                                      initial={{ opacity: 0, scale: 0.8, x: -20, y: -20 }}
+                                      animate={{ opacity: 1, scale: 1, x: 0 }}
+                                      exit={{ opacity: 0, scale: 0.8, x: -20, y: -20 }}
+                                      transition={{ duration: 0.3 }}
+                                      className="absolute z-10 left-full ml-2 top-0 w-64 p-4 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg shadow-lg"
+                                    >
+                                      <h4 className="font-bold mb-2">Explanation:</h4>
+                                      <p className="text-sm">{question.explanation}</p>
+                                    </motion.div>
+                                  )}
+                                </AnimatePresence>
+                              </div>
                             </CardHeader>
                             <CardContent className="space-y-2 min-h-32 relative">
-                              <AnimatePresence>
+                              {/* Answers section */}
+                              <div className="space-y-2">
                                 {question.options.map((option, optionIndex) => {
                                   const currentLabel = answerLabels[optionIndex]
                                   const isCorrect = currentLabel === question.answer
                                   const isSelected = currentLabel === userAnswers[originalIndex]
                                   const isIncorrectSelection = isSelected && !isCorrect
                                   
-                                  // When explanation is shown, only show correct answer or user's selection
-                                  const shouldShow = !showingExplanation || isCorrect || isSelected
-                                  
-                                  if (!shouldShow) return null;
+                                  // When explanation is shown, determine if we should highlight this answer
+                                  const isRelevantAnswer = isCorrect || isSelected
                                   
                                   return (
                                     <motion.div
                                       key={optionIndex}
-                                      initial={showingExplanation ? { opacity: 0, y: 10 } : {}}
-                                      animate={{ opacity: 1, y: 0 }}
-                                      exit={{ opacity: 0, height: 0, marginBottom: 0 }}
-                                      transition={{ duration: 0.3 }}
+                                      animate={{ 
+                                        opacity: showingExplanation && !isRelevantAnswer ? 0.1 : 1,
+                                      }}
+                                      transition={{ duration: 0.4 }}
                                       className={`
                                         flex items-center p-4 rounded-lg mb-2
                                         ${
@@ -177,8 +192,12 @@ export default function QuizReview({ questions, userAnswers, mainTopic = "Quiz",
                                         }
                                       `}
                                     >
-                                      <span className="text-lg font-medium mr-4 w-6">{currentLabel}</span>
-                                      <span className="flex-grow">{option}</span>
+                                      <span className="text-lg font-medium mr-4 w-6">
+                                        {currentLabel}
+                                      </span>
+                                      <span className="flex-grow">
+                                        {option}
+                                      </span>
                                       {isCorrect && (
                                         <Check className="ml-2 text-green-600 dark:text-green-400" size={20} />
                                       )}
@@ -188,23 +207,7 @@ export default function QuizReview({ questions, userAnswers, mainTopic = "Quiz",
                                     </motion.div>
                                   )
                                 })}
-                              </AnimatePresence>
-                              
-                              {/* Explanation section */}
-                              <AnimatePresence>
-                                {showingExplanation && question.explanation && (
-                                  <motion.div 
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: -20 }}
-                                    transition={{ duration: 0.4, delay: 0.1 }}
-                                    className="mt-4 p-4 border border-blue-200 rounded-lg bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800"
-                                  >
-                                    <h4 className="font-bold mb-2">Explanation based on the provided files:</h4>
-                                    <p>{question.explanation}</p>
-                                  </motion.div>
-                                )}
-                              </AnimatePresence>
+                              </div>
                             </CardContent>
                           </Card>
                         )

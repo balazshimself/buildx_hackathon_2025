@@ -1,4 +1,4 @@
-# First working prototype!
+# Second working prototype! Time for the competition!
 
 To run, an API key is needed in the forked project's local environment file. Add the following line:
 

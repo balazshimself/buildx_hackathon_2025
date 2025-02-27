@@ -10,24 +10,23 @@ import {
   RefreshCw,
   FileText,
   Upload,
-  ArrowLeft,
 } from "lucide-react";
 import QuizScore from "./score";
 import QuizReview from "./quiz-overview";
 import { Question } from "@/lib/schemas";
 import ShareQuizButton from "./ui/ShareQuizButton";
-import LikeDislikeButtons from "./ui/LikeDislikeButtons";
 import { useAuth } from "@/lib/auth-context";
-import { createQuiz } from "@/lib/firestore";
+import { createQuiz, incrementQuizCompletion } from "@/lib/firestore";
 import { toast } from "sonner";
 
 type QuizProps = {
   questions: Question[];
   mainTopic: string;
   subTopics: string[];
-  clearFiles: () => void;
-  quizId?: string; // For saving/liking after completion
-  isShared?: boolean; // Whether this is a shared quiz from the database
+  quizId?: string;
+  isShared?: boolean;
+  clearFiles?: () => void;
+  returnToDetail?: () => void;
 };
 
 const QuestionCard: React.FC<{
@@ -55,10 +54,10 @@ const QuestionCard: React.FC<{
               showCorrectAnswer && answerLabels[index] === question.answer
                 ? "bg-green-600 hover:bg-green-700"
                 : showCorrectAnswer &&
-                    selectedAnswer === answerLabels[index] &&
-                    selectedAnswer !== question.answer
-                  ? "bg-red-600 hover:bg-red-700"
-                  : ""
+                  selectedAnswer === answerLabels[index] &&
+                  selectedAnswer !== question.answer
+                ? "bg-red-600 hover:bg-red-700"
+                : ""
             }`}
             onClick={() => onSelectAnswer(answerLabels[index])}
           >
@@ -86,9 +85,10 @@ export default function Quiz({
   questions,
   mainTopic,
   subTopics,
-  clearFiles,
   quizId,
-  isShared = false
+  isShared = false,
+  clearFiles,
+  returnToDetail
 }: QuizProps) {
   const { user } = useAuth();
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -99,6 +99,7 @@ export default function Quiz({
   const [score, setScore] = useState<number | null>(null);
   const [progress, setProgress] = useState(0);
   const [savedQuizId, setSavedQuizId] = useState<string | null>(null);
+  const [completionUpdated, setCompletionUpdated] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -106,6 +107,23 @@ export default function Quiz({
     }, 100);
     return () => clearTimeout(timer);
   }, [currentQuestionIndex, questions.length]);
+
+  // Update completion count when quiz is submitted
+  useEffect(() => {
+    const updateCompletionCount = async () => {
+      if (isSubmitted && quizId && !completionUpdated) {
+        try {
+          await incrementQuizCompletion(quizId);
+          setCompletionUpdated(true);
+          console.log("Quiz completion count updated");
+        } catch (error) {
+          console.error("Error updating quiz completion count:", error);
+        }
+      }
+    };
+
+    updateCompletionCount();
+  }, [isSubmitted, quizId, completionUpdated]);
 
   const handleSelectAnswer = (answer: string) => {
     if (!isSubmitted) {
@@ -135,6 +153,11 @@ export default function Quiz({
       return acc + (question.answer === answers[index] ? 1 : 0);
     }, 0);
     setScore(correctAnswers);
+    
+    // Show completion toast if quizId exists
+    if (quizId) {
+      toast.success("Your progress has been recorded!");
+    }
   };
 
   const handleReset = () => {
@@ -171,6 +194,10 @@ export default function Quiz({
     }
   };
 
+  const handleCreateNewQuiz = () => {
+    window.location.href = '/';
+  };
+
   const currentQuestion = questions[currentQuestionIndex];
 
   return (
@@ -182,14 +209,12 @@ export default function Quiz({
         <div className="relative">
           {!isSubmitted && <Progress value={progress} className="h-1 mb-8" />}
           <div className="min-h-[400px]">
-            {" "}
-            {/* Prevent layout shift */}
             <AnimatePresence mode="wait">
               <motion.div
                 key={isSubmitted ? "results" : currentQuestionIndex}
-                initial={{ opacity: 1 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 1 }}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
                 transition={{ duration: 0.3 }}
               >
                 {!isSubmitted ? (
@@ -231,25 +256,66 @@ export default function Quiz({
                       totalQuestions={questions.length}
                     />
                     <div className="space-y-12">
-                      <QuizReview questions={questions} userAnswers={answers} mainTopic={mainTopic} subTopics={subTopics}/>
+                      <QuizReview 
+                        questions={questions} 
+                        userAnswers={answers} 
+                        mainTopic={mainTopic} 
+                        subTopics={subTopics}
+                      />
                     </div>
                     <div className="flex flex-col md:flex-row justify-center space-y-4 md:space-y-0 md:space-x-4 pt-4">
-                      <Button
-                        onClick={handleReset}
-                        variant="outline"
-                        className="bg-muted hover:bg-muted/80 w-full"
-                      >
-                        <RefreshCw className="mr-2 h-4 w-4" /> Solve Again
-                      </Button>
-                      <Button
-                        onClick={clearFiles}
-                        className="bg-primary hover:bg-primary/90 w-full"
-                      >
-                        {window.location.pathname.includes('/quiz/') ? 
-                          <><ArrowLeft className="mr-2 h-4 w-4" /> Back to Quiz Details</> : 
-                          <><FileText className="mr-2 h-4 w-4" /> Create a new quiz</>
-                        }
-                      </Button>
+                      {isShared && quizId ? (
+                        <>
+                          <Button
+                            onClick={handleReset}
+                            variant="outline"
+                            className="bg-muted hover:bg-muted/80 w-full"
+                          >
+                            <RefreshCw className="mr-2 h-4 w-4" /> Solve Again
+                          </Button>
+                          
+                          {returnToDetail && (
+                            <Button
+                              onClick={returnToDetail}
+                              variant="outline"
+                              className="bg-muted hover:bg-muted/80 w-full"
+                            >
+                              <FileText className="mr-2 h-4 w-4" /> Back to Quiz
+                            </Button>
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          <Button
+                            onClick={handleReset}
+                            variant="outline"
+                            className="bg-muted hover:bg-muted/80 w-full"
+                          >
+                            <RefreshCw className="mr-2 h-4 w-4" /> Solve Again
+                          </Button>
+                          
+                          {user && (
+                            savedQuizId ? (
+                              <ShareQuizButton quizId={savedQuizId} isPublic={false} />
+                            ) : (
+                              <Button
+                                onClick={handleSaveQuiz}
+                                variant="outline"
+                                className="bg-muted hover:bg-muted/80 w-full"
+                              >
+                                <Upload className="mr-2 h-4 w-4" /> Save Quiz
+                              </Button>
+                            )
+                          )}
+                          
+                          <Button
+                            onClick={handleCreateNewQuiz}
+                            className="bg-primary hover:bg-primary/90 w-full"
+                          >
+                            <FileText className="mr-2 h-4 w-4" /> Create a new quiz
+                          </Button>
+                        </>
+                      )}
                     </div>
                   </div>
                 )}

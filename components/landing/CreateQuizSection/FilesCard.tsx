@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { FileUp, X } from 'lucide-react';
 import { toast } from 'sonner';
@@ -87,7 +87,10 @@ export default function FilesCard({ files, setFiles, hasError = false }: FilesCa
       </AnimatePresence>
 
       <CardHeader>
-        <CardTitle className="text-xl">Upload Content</CardTitle>
+        <CardTitle className="text-xl">2. Upload Content</CardTitle>
+        <CardDescription>
+          Upload multiple files relevent to your topics
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="flex flex-col h-[200px]">

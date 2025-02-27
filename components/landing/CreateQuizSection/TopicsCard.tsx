@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -47,22 +47,22 @@ export default function TopicsCard({
   };
 
   return (
-    <Card className={`w-full h-full ${hasError ? 'error-highlight border-red-500 border-2' : ''}`}>
+    <Card className={`w-full h-auto ${hasError ? 'error-highlight border-red-500 border-2' : ''}`}>
       <CardHeader>
-        <CardTitle className="text-xl">Define Your Topics</CardTitle>
+        <CardTitle className="text-xl">1. Define Your Topics</CardTitle>
+        <CardDescription>
+            Enter your topics or upload a{" "}
+            <TooltipProvider>
+                <Tooltip>
+                <TooltipTrigger className="underline">JSON file</TooltipTrigger>
+                <TooltipContent>
+                    <pre className="p-2">{JSON.stringify(jsonExample, null, 2)}</pre>
+                </TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="text-sm text-muted-foreground mb-4">
-          Enter your topics or upload a{" "}
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger className="underline">JSON file</TooltipTrigger>
-              <TooltipContent>
-                <pre className="p-2">{JSON.stringify(jsonExample, null, 2)}</pre>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
         
         <Input
           placeholder={`Main topic (e.g. ${jsonExample.mainTopic})`}
@@ -76,7 +76,7 @@ export default function TopicsCard({
           onChange={(e) => setSubTopics(e.target.value)}
         />
         
-        <div className="flex justify-center pt-2">
+        <div className="flex justify-center">
           <label className="cursor-pointer w-full">
             <input type="file" accept=".json" onChange={handleJsonUpload} className="hidden" />
             <Button variant="outline" className="w-full" asChild>

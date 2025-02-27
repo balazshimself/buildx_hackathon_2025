@@ -36,7 +36,7 @@ export default function Header() {
   };
 
   return (
-    <header className="border-b w-full relative z-10">
+    <header className="w-full fixed z-10">
       <div className="container mx-auto max-w-7xl flex items-center justify-between h-16 px-4 md:px-6">
         <div className="flex items-center gap-2 cursor-pointer" onClick={() => router.push('/')}>
           <Brain className="h-6 w-6" />

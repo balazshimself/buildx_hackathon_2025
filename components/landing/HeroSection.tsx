@@ -19,13 +19,12 @@ export default function HeroSection({
 }: HeroSectionProps) {
   // Animation variants
   const containerVariants = {
-    centered: { y: 50 },
-    raised: { y: -50, transition: { duration: 0.5, ease: "easeInOut" } }
+    centered: { marginTop: '20vh' },
+    raised: { marginTop: '10vh', transition: { duration: 0.5, ease: "easeInOut" } }
   };
 
   return (
     <motion.section
-      className="py-6 md:py-12 lg:py-16 xl:py-20 px-4"
       variants={containerVariants}
       initial="centered"
       animate={activeSection !== 'none' ? 'raised' : 'centered'}

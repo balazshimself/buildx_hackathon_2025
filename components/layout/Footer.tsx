@@ -4,7 +4,7 @@ import { Brain } from 'lucide-react';
 
 export default function Footer() {
   return (
-    <footer className="border-t w-full bg-background z-10">
+    <footer className="w-full bg-backgorund z-10 fixed bottom-0">
       <div className="container mx-auto max-w-7xl flex flex-col md:flex-row items-center justify-between py-4 px-4 md:px-6">
         <div className="flex items-center gap-2 mb-2 md:mb-0">
           <Brain className="h-5 w-5" />

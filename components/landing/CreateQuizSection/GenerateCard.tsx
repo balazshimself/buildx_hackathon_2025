@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, FileText, Share } from 'lucide-react';
+import { Loader2, FileText, Share, Download, UploadCloud } from 'lucide-react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
@@ -140,7 +140,7 @@ export default function GenerateCard({
         mainTopic,
         subTopics: subTopics.split(',').map(s => s.trim()),
         questions,
-        isPublic: true,
+        isPublic: true, //VITAL TO KEEP IT TRUE
         isTemporary: false
       };
       
@@ -158,20 +158,100 @@ export default function GenerateCard({
     }
   };
 
+  const handleDownloadQuiz = async () => {
+    if (!generatedQuizId || !questions || questions.length === 0) {
+      toast.error('No quiz data available to download');
+      return;
+    }
+    
+    try {
+      // Create the quiz data in the required format
+      const downloadData = {
+        metadata: {
+          userId: user ? user.uid : 'guest',
+          creatorName: user ? user.displayName || user.email?.split('@')[0] : 'Guest',
+          timestamp: new Date().toISOString(),
+          mainTopic: mainTopic,
+          subTopics: subTopics.split(',').map(s => s.trim())
+        },
+        questions: questions.map(q => ({
+          question: q.question,
+          options: q.options,
+          answer: q.answer
+        }))
+      };
+      
+      // Convert to JSON string
+      const jsonString = JSON.stringify(downloadData, null, 2);
+      
+      // Create a blob
+      const blob = new Blob([jsonString], { type: 'application/json' });
+      
+      // Use the browser's file saving mechanism
+      const suggestedName = `quiz-${mainTopic.toLowerCase().replace(/\s+/g, '-')}.json`;
+      
+      // Check if the experimental showSaveFilePicker API is available
+      const win = window as any;
+      if (typeof win.showSaveFilePicker === 'function') {
+        try {
+          const saveFileOptions = {
+            suggestedName: suggestedName,
+            types: [{
+              description: 'JSON Files',
+              accept: { 'application/json': ['.json'] }
+            }]
+          };
+          
+          // Show the save dialog and save the file
+          const fileHandle = await win.showSaveFilePicker(saveFileOptions);
+          const writable = await fileHandle.createWritable();
+          await writable.write(blob);
+          await writable.close();
+          toast.success('Quiz saved successfully!');
+        } catch (err: any) {
+          // If user cancels, it's not an error
+          if (err.name !== 'AbortError') {
+            console.error('Error using file picker:', err);
+            // Fall back to the traditional download method
+            fallbackDownload(blob, suggestedName);
+          }
+        }
+      } else {
+        // Fall back to the traditional download method for browsers without the File System Access API
+        fallbackDownload(blob, suggestedName);
+      }
+    } catch (error) {
+      console.error('Error downloading quiz:', error);
+      toast.error('Failed to download quiz. Please try again.');
+    }
+  };
+  
+  // Standard download method that works in all browsers
+  const fallbackDownload = (blob: Blob, fileName: string) => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success('Quiz download initiated!');
+  };
+
   return (
-    <Card className={`w-full h-full ${hasError ? 'error-highlight border-red-500 border-2' : ''}`}>
+    <Card className={`w-full h-auto ${hasError ? 'error-highlight border-red-500 border-2' : ''}`}>
       <CardHeader>
-        <CardTitle className="text-xl">Generate Quiz</CardTitle>
+        <CardTitle className="text-xl">3. Generate Quiz</CardTitle>
         <CardDescription>
-          Use AI to create a personalized quiz from your content! Our AI analyzes your content to create relevant, challenging questions tailored to your specific learning materials.
+          Use AI to create a personalized quiz from your content.
         </CardDescription>
       </CardHeader>
-      <CardContent className="flex flex-col justify-between h-[calc(100%-88px)]">
+      <CardContent className="flex flex-col justify-between">
         
-        <div className="mt-6 space-y-4">
-          {!generatedQuizId ? (
+        <div className="space-y-4">
             <Button 
-              onClick={handleGenerateQuiz} 
+              onClick={!generatedQuizId ? (handleGenerateQuiz) : (handleSolveQuiz)} 
               className="w-full" 
               disabled={isGenerating}
               size="lg"
@@ -182,39 +262,29 @@ export default function GenerateCard({
                   <span>Generating Quiz...</span>
                 </span>
               ) : (
-                "Generate Quiz"
+                generatedQuizId ? (
+                <span className="flex items-center space-x-2">
+                  <FileText className="mr-2 h-4 w-4" />
+                  <span>Take Quiz</span>
+                </span>) : ("Generate Quiz")
               )}
             </Button>
-          ) : (
-            <>
+            <span className="flex items-center space-x-2">
               <Button 
-                onClick={handleSolveQuiz} 
+                onClick={() => publishQuiz()} 
                 className="w-full" 
-                size="lg"
-                variant="default"
-              >
-                <FileText className="mr-2 h-4 w-4" /> Take Quiz
+                variant="secondary"
+                disabled={!generatedQuizId}>
+                <UploadCloud className="mr-2 h-4 w-4" />Publish Quiz
               </Button>
               <Button 
-                onClick={() => publishQuiz()}
+                onClick={handleDownloadQuiz} 
                 className="w-full" 
-                // size="md"
-                variant="outline"
-                disabled={!user || isPublishing}
-              >
-                {isPublishing ? (
-                  <span className="flex items-center space-x-2">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    <span>Publishing...</span>
-                  </span>
-                ) : user ? (
-                  <><Share className="mr-2 h-4 w-4" /> Publish Quiz</>
-                ) : (
-                  "Login to Publish Quiz"
-                )}
+                variant="secondary"
+                disabled={!generatedQuizId}>
+                <Download className="mr-2 h-4 w-4" /> Download Quiz
               </Button>
-            </>
-          )}
+            </span>
         </div>
       </CardContent>
     </Card>

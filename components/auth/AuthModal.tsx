@@ -7,6 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/lib/auth-context';
 import { toast } from 'sonner';
+import { motion, AnimatePresence } from "framer-motion";
+
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -61,8 +63,22 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin' }: A
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm transition-all duration-300 bg-black/50">
-      <div className="bg-background w-full max-w-md rounded-lg shadow-lg">
+    // <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm transition-all duration-300 bg-black/50">
+    //   <div className="bg-background w-full max-w-md rounded-lg shadow-lg">
+    <AnimatePresence>
+    <motion.div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+      initial={{ backdropFilter: "blur(0px)", opacity: 0 }}
+      animate={{ backdropFilter: "blur(4px)", opacity: 1 }}
+      exit={{ backdropFilter: "blur(0px)", opacity: 0 }}
+      transition={{ duration: 0.2 }}>
+      <motion.div
+        className="bg-background w-full max-w-md rounded-lg shadow-lg"
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.9, opacity: 0 }}
+        transition={{ duration: 0.2 }}>
+        
         <div className="flex items-center justify-between p-6 border-b">
           <h2 className="text-xl font-semibold">
             {mode === 'signin' ? 'Sign In' : 'Create Account'}
@@ -175,7 +191,8 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin' }: A
             )}
           </div>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
+  </AnimatePresence>
   );
 }

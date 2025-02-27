@@ -8,9 +8,9 @@ interface MainLayoutProps {
 
 export default function MainLayout({ children }: MainLayoutProps) {
   return (
-    <div className="flex flex-col min-h-screen bg-background">
+    <div className="flex flex-col">
       <Header />
-      <main className="flex-1 relative z-0">
+      <main className="flex-1 static z-0">
         {children}
       </main>
       <Footer />
