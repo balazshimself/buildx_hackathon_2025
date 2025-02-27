@@ -10,7 +10,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <Header />
-      <main className="flex-1">
+      <main className="flex-1 relative z-0">
         {children}
       </main>
       <Footer />

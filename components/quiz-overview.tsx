@@ -1,9 +1,9 @@
-
 import { Check, X, ChevronDown, ChevronUp, School } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Question } from '@/lib/schemas'
 import { Button } from './ui/button'
 import { useState, useMemo } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 
 interface QuizReviewProps {
   questions: Question[]
@@ -89,14 +89,14 @@ export default function QuizReview({ questions, userAnswers, mainTopic = "Quiz",
   }
 
   return (
-    <div className="w-full">
+    <div className="w-full overflow-hidden">
         {Object.entries(questionsBySubtopic).map(([subtopicIndexStr, subtopicQuestions]) => {
           const subtopicIndex = parseInt(subtopicIndexStr)
           const stats = subtopicStats[subtopicIndex]
           const isExpanded = expandedSubtopics[subtopicIndex]
           
           return (
-            <Card key={subtopicIndex} className="mb-6 last:mb-0">
+            <Card key={subtopicIndex} className="mb-6 last:mb-0 overflow-hidden">
               <CardHeader 
                 className="flex flex-row items-center justify-between cursor-pointer"
                 onClick={() => toggleSubtopic(subtopicIndex)}
@@ -108,86 +108,111 @@ export default function QuizReview({ questions, userAnswers, mainTopic = "Quiz",
                   <span className="mr-2 font-medium">
                     {stats.correct}/{stats.total} correct
                   </span>
-                  {isExpanded ? (
-                    <ChevronUp className="h-5 w-5" />
-                  ) : (
+                  <motion.div
+                    initial={false}
+                    animate={{ rotate: isExpanded ? 180 : 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
                     <ChevronDown className="h-5 w-5" />
-                  )}
+                  </motion.div>
                 </div>
               </CardHeader>
               
-              {isExpanded && (
-                <CardContent className="pt-2">
-                  {subtopicQuestions.map((question, questionIndex) => {
-                    // Find the original index in the full questions array to get correct userAnswer
-                    const originalIndex = questions.findIndex(q => 
-                      q.question === question.question && q.subtopic === question.subtopic
-                    )
-                    
-                    const showingExplanation = isExplanationShown(subtopicIndex, questionIndex)
-                    
-                    return (
-                      <Card key={questionIndex} className="mb-6 p-1 last:mb-0 bg-gray">
-                        <CardHeader className="flex flex-row items-start justify-between gap-4">
-                          <CardTitle className="text-lg font-bold">{question.question}</CardTitle>
-                          <Button 
-                            className={`rounded-full shrink-0 transition-all ${showingExplanation ? 'opacity-50' : ''}`}
-                            onClick={() => toggleExplanation(subtopicIndex, questionIndex)}>
-                            <School/> 
-                          </Button>
-                        </CardHeader>
-                        <CardContent className="space-y-2 min-h-32 relative">
-                          {question.options.map((option, optionIndex) => {
-                            const currentLabel = answerLabels[optionIndex]
-                            const isCorrect = currentLabel === question.answer
-                            const isSelected = currentLabel === userAnswers[originalIndex]
-                            const isIncorrectSelection = isSelected && !isCorrect
-                            
-                            // When explanation is shown, only show correct answer or user's selection
-                            const shouldShow = !showingExplanation || isCorrect || isSelected
-                            
-                            return (
-                              <div
-                                key={optionIndex}
-                                className={`
-                                  flex items-center p-4 rounded-lg
-                                  transition-all duration-300
-                                  ${showingExplanation ? 'transform' : ''}
-                                  ${shouldShow ? 'opacity-100 max-h-24 mb-2' : 'opacity-0 max-h-0 overflow-hidden p-0 m-0'}
-                                  ${
-                                    isCorrect
-                                      ? 'bg-green-100 dark:bg-green-700/50'
-                                      : isIncorrectSelection
-                                      ? 'bg-red-100 dark:bg-red-700/50'
-                                      : 'border border-border'
-                                  }
-                                `}
-                              >
-                                <span className="text-lg font-medium mr-4 w-6">{currentLabel}</span>
-                                <span className="flex-grow">{option}</span>
-                                {isCorrect && (
-                                  <Check className="ml-2 text-green-600 dark:text-green-400" size={20} />
+              <AnimatePresence>
+                {isExpanded && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="overflow-hidden"
+                  >
+                    <CardContent className="pt-2">
+                      {subtopicQuestions.map((question, questionIndex) => {
+                        // Find the original index in the full questions array to get correct userAnswer
+                        const originalIndex = questions.findIndex(q => 
+                          q.question === question.question && q.subtopic === question.subtopic
+                        )
+                        
+                        const showingExplanation = isExplanationShown(subtopicIndex, questionIndex)
+                        
+                        return (
+                          <Card key={questionIndex} className="mb-6 p-1 last:mb-0 bg-gray">
+                            <CardHeader className="flex flex-row items-start justify-between gap-4">
+                              <CardTitle className="text-lg font-bold">{question.question}</CardTitle>
+                              <Button 
+                                className={`rounded-full shrink-0 transition-all h-12 w-12 ${showingExplanation ? 'bg-primary/80' : ''}`}
+                                onClick={() => toggleExplanation(subtopicIndex, questionIndex)}>
+                                <School size={24} /> 
+                              </Button>
+                            </CardHeader>
+                            <CardContent className="space-y-2 min-h-32 relative">
+                              <AnimatePresence>
+                                {question.options.map((option, optionIndex) => {
+                                  const currentLabel = answerLabels[optionIndex]
+                                  const isCorrect = currentLabel === question.answer
+                                  const isSelected = currentLabel === userAnswers[originalIndex]
+                                  const isIncorrectSelection = isSelected && !isCorrect
+                                  
+                                  // When explanation is shown, only show correct answer or user's selection
+                                  const shouldShow = !showingExplanation || isCorrect || isSelected
+                                  
+                                  if (!shouldShow) return null;
+                                  
+                                  return (
+                                    <motion.div
+                                      key={optionIndex}
+                                      initial={showingExplanation ? { opacity: 0, y: 10 } : {}}
+                                      animate={{ opacity: 1, y: 0 }}
+                                      exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+                                      transition={{ duration: 0.3 }}
+                                      className={`
+                                        flex items-center p-4 rounded-lg mb-2
+                                        ${
+                                          isCorrect
+                                            ? 'bg-green-100 dark:bg-green-700/50'
+                                            : isIncorrectSelection
+                                            ? 'bg-red-100 dark:bg-red-700/50'
+                                            : 'border border-border'
+                                        }
+                                      `}
+                                    >
+                                      <span className="text-lg font-medium mr-4 w-6">{currentLabel}</span>
+                                      <span className="flex-grow">{option}</span>
+                                      {isCorrect && (
+                                        <Check className="ml-2 text-green-600 dark:text-green-400" size={20} />
+                                      )}
+                                      {isIncorrectSelection && (
+                                        <X className="ml-2 text-red-600 dark:text-red-400" size={20} />
+                                      )}
+                                    </motion.div>
+                                  )
+                                })}
+                              </AnimatePresence>
+                              
+                              {/* Explanation section */}
+                              <AnimatePresence>
+                                {showingExplanation && question.explanation && (
+                                  <motion.div 
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -20 }}
+                                    transition={{ duration: 0.4, delay: 0.1 }}
+                                    className="mt-4 p-4 border border-blue-200 rounded-lg bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800"
+                                  >
+                                    <h4 className="font-bold mb-2">Explanation based on the provided files:</h4>
+                                    <p>{question.explanation}</p>
+                                  </motion.div>
                                 )}
-                                {isIncorrectSelection && (
-                                  <X className="ml-2 text-red-600 dark:text-red-400" size={20} />
-                                )}
-                              </div>
-                            )
-                          })}
-                          
-                          {/* Explanation section */}
-                          {showingExplanation && question.explanation && (
-                            <div className="mt-4 p-4 border border-blue-200 rounded-lg bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800 animate-fadeIn">
-                              <h4 className="font-bold mb-2">Explanation based on the provided files:</h4>
-                              <p>{question.explanation}</p>
-                            </div>
-                          )}
-                        </CardContent>
-                      </Card>
-                    )
-                  })}
-                </CardContent>
-              )}
+                              </AnimatePresence>
+                            </CardContent>
+                          </Card>
+                        )
+                      })}
+                    </CardContent>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </Card>
           )
         })}

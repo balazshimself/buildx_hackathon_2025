@@ -55,7 +55,7 @@ export default function BrowseQuizzesSection({ isVisible }: BrowseQuizzesSection
           collection(db, 'quizzes'),
           where('isPublic', '==', true),
           orderBy('createdAt', 'desc'),
-          limit(6)
+          limit(8)
         );
         
         const querySnapshot = await getDocs(quizzesQuery);

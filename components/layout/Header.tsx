@@ -6,11 +6,13 @@ import { Link } from '@/components/ui/link';
 import { Brain } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import AuthModal from '@/components/auth/AuthModal';
+import { useRouter } from 'next/navigation';
 
 export default function Header() {
   const { user, logout } = useAuth();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authModalMode, setAuthModalMode] = useState<'signin' | 'signup'>('signin');
+  const router = useRouter();
 
   const openSignIn = () => {
     setAuthModalMode('signin');
@@ -34,9 +36,9 @@ export default function Header() {
   };
 
   return (
-    <header className="border-b w-full">
+    <header className="border-b w-full relative z-10">
       <div className="container mx-auto max-w-7xl flex items-center justify-between h-16 px-4 md:px-6">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 cursor-pointer" onClick={() => router.push('/')}>
           <Brain className="h-6 w-6" />
           <span className="text-xl font-bold">QuizGen AI</span>
         </div>
@@ -44,7 +46,7 @@ export default function Header() {
           {user ? (
             <>
               <div className="hidden md:flex items-center mr-4">
-                <span className="text-sm text-muted-foreground">👋 Hello, {user.displayName || user.email}</span>
+                <span className="text-sm text-muted-foreground">👋 Hello, {user.displayName || user.email?.split('@')[0] || 'User'}</span>
               </div>
               <Button
                 onClick={handleLogout}

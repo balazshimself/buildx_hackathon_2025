@@ -61,7 +61,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin' }: A
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+    <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm transition-all duration-300 bg-black/50">
       <div className="bg-background w-full max-w-md rounded-lg shadow-lg">
         <div className="flex items-center justify-between p-6 border-b">
           <h2 className="text-xl font-semibold">
@@ -152,7 +152,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin' }: A
           <div className="text-center text-sm">
             {mode === 'signin' ? (
               <p>
-                Don't have an account?{' '}
+                Don&apos;t have an account?{' '}
                 <button
                   type="button"
                   className="text-primary underline"

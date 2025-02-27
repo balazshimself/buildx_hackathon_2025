@@ -1,11 +1,11 @@
-'use client';
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, Brain, FileText } from 'lucide-react';
+import { Loader2, FileText, Share } from 'lucide-react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/lib/auth-context';
+import { createQuiz } from '@/lib/firestore';
 
 interface GenerateCardProps {
   mainTopic: string;
@@ -33,6 +33,8 @@ export default function GenerateCard({
   hasError = false
 }: GenerateCardProps) {
   const router = useRouter();
+  const { user } = useAuth();
+  const [isPublishing, setIsPublishing] = useState(false);
 
   const encodeFileAsBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -87,7 +89,7 @@ export default function GenerateCard({
       const randomId = Math.random().toString(36).substring(2, 15);
       setGeneratedQuizId(randomId);
       
-      // Store the generated quiz in localStorage for the solve page to access
+      // Store the generated quiz in localStorage for the quiz page to access
       localStorage.setItem('generated_quiz', JSON.stringify({
         id: randomId,
         mainTopic,
@@ -106,8 +108,53 @@ export default function GenerateCard({
 
   const handleSolveQuiz = () => {
     if (generatedQuizId) {
-      // Open in a new tab
-      window.open(`/quiz/solve/${generatedQuizId}`, '_blank');
+      // Store the generated quiz in localStorage for the quiz page to access
+      localStorage.setItem('current_quiz', JSON.stringify({
+        id: generatedQuizId,
+        mainTopic,
+        subTopics: subTopics.split(',').map(s => s.trim()),
+        questions: questions,
+        creatorName: user ? user.displayName || user.email?.split('@')[0] : 'Guest',
+        isPublic: false,
+        isTemporary: true // Mark this quiz as temporary (not published)
+      }));
+      
+      // Navigate to the quiz page
+      router.push(`/quiz/${generatedQuizId}`);
+    }
+  };
+  
+  const publishQuiz = async () => {
+    if (!user) {
+      toast.error("Please log in to publish quizzes");
+      return;
+    }
+    
+    setIsPublishing(true);
+    
+    try {
+      const quizData = {
+        title: mainTopic,
+        userId: user.uid,
+        creatorName: user.displayName || user.email?.split('@')[0] || 'Guest',
+        mainTopic,
+        subTopics: subTopics.split(',').map(s => s.trim()),
+        questions,
+        isPublic: true,
+        isTemporary: false
+      };
+      
+      const quizId = await createQuiz(quizData);
+      
+      toast.success("Quiz published successfully!");
+      
+      // Navigate to the quiz page
+      router.push(`/quiz/${quizId}`);
+    } catch (error) {
+      console.error("Error publishing quiz:", error);
+      toast.error("Failed to publish quiz. Please try again.");
+    } finally {
+      setIsPublishing(false);
     }
   };
 
@@ -121,7 +168,7 @@ export default function GenerateCard({
       </CardHeader>
       <CardContent className="flex flex-col justify-between h-[calc(100%-88px)]">
         
-        <div className="mt-6">
+        <div className="mt-6 space-y-4">
           {!generatedQuizId ? (
             <Button 
               onClick={handleGenerateQuiz} 
@@ -139,14 +186,34 @@ export default function GenerateCard({
               )}
             </Button>
           ) : (
-            <Button 
-              onClick={handleSolveQuiz} 
-              className="w-full" 
-              size="lg"
-              variant="default"
-            >
-              <FileText className="mr-2 h-4 w-4" /> Solve Quiz
-            </Button>
+            <>
+              <Button 
+                onClick={handleSolveQuiz} 
+                className="w-full" 
+                size="lg"
+                variant="default"
+              >
+                <FileText className="mr-2 h-4 w-4" /> Take Quiz
+              </Button>
+              <Button 
+                onClick={() => publishQuiz()}
+                className="w-full" 
+                // size="md"
+                variant="outline"
+                disabled={!user || isPublishing}
+              >
+                {isPublishing ? (
+                  <span className="flex items-center space-x-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Publishing...</span>
+                  </span>
+                ) : user ? (
+                  <><Share className="mr-2 h-4 w-4" /> Publish Quiz</>
+                ) : (
+                  "Login to Publish Quiz"
+                )}
+              </Button>
+            </>
           )}
         </div>
       </CardContent>

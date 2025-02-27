@@ -10,11 +10,13 @@ import {
   RefreshCw,
   FileText,
   Upload,
+  ArrowLeft,
 } from "lucide-react";
 import QuizScore from "./score";
 import QuizReview from "./quiz-overview";
 import { Question } from "@/lib/schemas";
 import ShareQuizButton from "./ui/ShareQuizButton";
+import LikeDislikeButtons from "./ui/LikeDislikeButtons";
 import { useAuth } from "@/lib/auth-context";
 import { createQuiz } from "@/lib/firestore";
 import { toast } from "sonner";
@@ -24,6 +26,8 @@ type QuizProps = {
   mainTopic: string;
   subTopics: string[];
   clearFiles: () => void;
+  quizId?: string; // For saving/liking after completion
+  isShared?: boolean; // Whether this is a shared quiz from the database
 };
 
 const QuestionCard: React.FC<{
@@ -83,6 +87,8 @@ export default function Quiz({
   mainTopic,
   subTopics,
   clearFiles,
+  quizId,
+  isShared = false
 }: QuizProps) {
   const { user } = useAuth();
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -235,26 +241,14 @@ export default function Quiz({
                       >
                         <RefreshCw className="mr-2 h-4 w-4" /> Solve Again
                       </Button>
-                      
-                      {user && (
-                        savedQuizId ? (
-                          <ShareQuizButton quizId={savedQuizId} isPublic={false} />
-                        ) : (
-                          <Button
-                            onClick={handleSaveQuiz}
-                            variant="outline"
-                            className="bg-muted hover:bg-muted/80 w-full"
-                          >
-                            <Upload className="mr-2 h-4 w-4" /> Save Quiz
-                          </Button>
-                        )
-                      )}
-                      
                       <Button
                         onClick={clearFiles}
                         className="bg-primary hover:bg-primary/90 w-full"
                       >
-                        <FileText className="mr-2 h-4 w-4" /> Create a new quiz
+                        {window.location.pathname.includes('/quiz/') ? 
+                          <><ArrowLeft className="mr-2 h-4 w-4" /> Back to Quiz Details</> : 
+                          <><FileText className="mr-2 h-4 w-4" /> Create a new quiz</>
+                        }
                       </Button>
                     </div>
                   </div>

@@ -27,6 +27,7 @@ import {
   
   // Quiz types
   export interface Quiz {
+    isTemporary?: any;
     id: string;
     title: string;
     userId: string;
